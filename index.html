@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distance Query Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        select, button {
+            margin: 5px;
+            padding: 5px;
+            font-size: 16px;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Distance Query Tool</h1>
+    <label for="transport">Select Transport:</label>
+    <select id="transport"></select>
+    <br>
+    <label for="start">Select Start:</label>
+    <select id="start"></select>
+    <br>
+    <label for="end">Select End:</label>
+    <select id="end"></select>
+    <br>
+    <button onclick="calculateDistance()">Calculate Distance</button>
+    <div id="result"></div>
+
+    <script>
+        let distances = [];
+
+        // 加載 JSON 數據
+        fetch('distances.json')
+            .then(response => response.json())
+            .then(data => {
+                distances = data;
+                populateTransportOptions();
+            });
+
+        // 填充交通工具選項
+        function populateTransportOptions() {
+            const transportSelect = document.getElementById('transport');
+            const uniqueTransports = [...new Set(distances.map(item => item.Transport))];
+            uniqueTransports.forEach(transport => {
+                const option = document.createElement('option');
+                option.value = transport;
+                option.textContent = transport;
+                transportSelect.appendChild(option);
+            });
+
+            // 更新起點和終點選項
+            transportSelect.addEventListener('change', updateStartEndOptions);
+            transportSelect.dispatchEvent(new Event('change'));
+        }
+
+        // 更新起點和終點選項
+        function updateStartEndOptions() {
+            const transport = document.getElementById('transport').value;
+            const startSelect = document.getElementById('start');
+            const endSelect = document.getElementById('end');
+
+            const starts = [...new Set(distances.filter(item => item.Transport === transport).map(item => item.Start))];
+            const ends = [...new Set(distances.filter(item => item.Transport === transport).map(item => item.End))];
+
+            startSelect.innerHTML = '';
+            endSelect.innerHTML = '';
+
+            starts.forEach(start => {
+                const option = document.createElement('option');
+                option.value = start;
+                option.textContent = start;
+                startSelect.appendChild(option);
+            });
+
+            ends.forEach(end => {
+                const option = document.createElement('option');
+                option.value = end;
+                option.textContent = end;
+                endSelect.appendChild(option);
+            });
+        }
+
+        // 計算距離
+        function calculateDistance() {
+            const transport = document.getElementById('transport').value;
+            const start = document.getElementById('start').value;
+            const end = document.getElementById('end').value;
+
+            const match = distances.find(item => item.Transport === transport && item.Start === start && item.End === end);
+
+            const resultDiv = document.getElementById('result');
+            if (match) {
+                resultDiv.textContent = `The distance from ${start} to ${end} by ${transport} is ${match.Distance} km.`;
+            } else {
+                resultDiv.textContent = 'No distance data available for the selected options.';
+            }
+        }
+
+        // 初始化
+        loadData();
+    </script>
+</body>
+</html>
